@@ -10,7 +10,7 @@ use crate::types::{Coord, ResourceKind};
 
 /// Carte immuable après génération (partagée en lecture seule via `Arc`).
 pub struct Map {
-    pub width: u16
+    pub width: u16,
     pub height: u16,
     /// Grille des obstacles, indexée par `y * width + x`.
     obstacles: Vec<bool>,
