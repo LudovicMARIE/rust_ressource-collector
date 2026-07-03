@@ -1,6 +1,3 @@
-//! Génération procédurale de la carte : obstacles via bruit de Perlin et
-//! placement aléatoire des ressources.
-
 use std::collections::{HashMap, HashSet, VecDeque};
 
 use noise::{NoiseFn, Perlin};
@@ -8,25 +5,15 @@ use rand::{Rng, RngExt};
 
 use crate::types::{Coord, ResourceKind};
 
-/// Carte immuable après génération (partagée en lecture seule via `Arc`).
 pub struct Map {
     pub width: u16,
     pub height: u16,
-    /// Grille des obstacles, indexée par `y * width + x`.
     obstacles: Vec<bool>,
-    /// Emplacements d'origine des ressources et leur quantité initiale.
     pub resources: HashMap<Coord, (ResourceKind, u32)>,
-    /// Position de la base centrale.
     pub base: Coord,
 }
 
 impl Map {
-    /// Génère une carte de dimensions données.
-    ///
-    /// * Les obstacles sont produits par un bruit de Perlin seuillé.
-    /// * Les ressources (énergie / cristaux) sont dispersées aléatoirement sur
-    ///   les cases libres, avec une quantité de 50 à 200 unités.
-    /// * Une zone dégagée est garantie autour de la base.
     pub fn generate(width: u16, height: u16, resource_count: usize) -> Self {
         let mut rng = rand::rng();
         let seed: u32 = rng.next_u32();
@@ -35,7 +22,6 @@ impl Map {
         let base = (width / 2, height / 2);
         let mut obstacles = vec![false; width as usize * height as usize];
 
-        // --- Obstacles via bruit de Perlin ---
         const SCALE: f64 = 0.085;
         const THRESHOLD: f64 = 0.40;
         for y in 0..height {
@@ -55,7 +41,6 @@ impl Map {
             base,
         };
 
-        // Dégage une zone 3x3 autour de la base : point de départ sûr.
         for dy in -1i32..=1 {
             for dx in -1i32..=1 {
                 let nx = base.0 as i32 + dx;
@@ -67,12 +52,8 @@ impl Map {
             }
         }
 
-        // Ensemble des cases accessibles depuis la base (parcours en largeur).
-        // Les ressources ne sont placées que là, garantissant qu'un chemin
-        // existe toujours : aucun collecteur ne peut se retrouver bloqué.
         let reachable = map.reachable_from(base);
 
-        // --- Placement des ressources sur des cases libres et accessibles ---
         let reachable_vec: Vec<Coord> = reachable.iter().copied().collect();
         let mut placed = 0;
         let mut attempts = 0;
@@ -101,7 +82,6 @@ impl Map {
         x >= 0 && y >= 0 && x < self.width as i32 && y < self.height as i32
     }
 
-    /// Indique si la case `(x, y)` est un obstacle (hors-limites = obstacle).
     #[inline]
     pub fn is_obstacle(&self, x: u16, y: u16) -> bool {
         if x >= self.width || y >= self.height {
@@ -110,7 +90,6 @@ impl Map {
         self.obstacles[y as usize * self.width as usize + x as usize]
     }
 
-    /// Voisins orthogonaux franchissables (dans les limites et sans obstacle).
     pub fn walkable_neighbors(&self, pos: Coord) -> Vec<Coord> {
         const DIRS: [(i32, i32); 4] = [(0, -1), (0, 1), (-1, 0), (1, 0)];
         let mut out = Vec::with_capacity(4);
@@ -124,8 +103,6 @@ impl Map {
         out
     }
 
-    /// Renvoie l'ensemble des cases franchissables accessibles depuis `start`
-    /// (parcours en largeur sur les voisins orthogonaux).
     pub fn reachable_from(&self, start: Coord) -> HashSet<Coord> {
         let mut seen = HashSet::new();
         let mut queue = VecDeque::new();

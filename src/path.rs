@@ -1,5 +1,3 @@
-//! Recherche de chemin A* sur la grille (déplacements orthogonaux).
-
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashMap};
 
@@ -22,7 +20,6 @@ struct Node {
 
 impl Ord for Node {
     fn cmp(&self, other: &Self) -> Ordering {
-        // Tas-min : on inverse l'ordre pour que le plus petit `est` sorte en premier.
         other
             .est
             .cmp(&self.est)
@@ -35,10 +32,6 @@ impl PartialOrd for Node {
     }
 }
 
-/// Calcule un chemin A* de `start` à `goal` en évitant les obstacles, puis
-/// renvoie uniquement la **première case** à emprunter (`None` si l'on est déjà
-/// arrivé ou si aucun chemin n'existe). Recalculer le premier pas à chaque tick
-/// permet de réagir aux changements (ressources épuisées, robots mobiles).
 pub fn next_step(map: &Map, start: Coord, goal: Coord) -> Option<Coord> {
     if start == goal {
         return None;
@@ -57,7 +50,6 @@ pub fn next_step(map: &Map, start: Coord, goal: Coord) -> Option<Coord> {
 
     while let Some(Node { cost, pos, .. }) = open.pop() {
         if pos == goal {
-            // Remonte la chaîne de prédécesseurs jusqu'au premier pas après `start`.
             let mut cur = goal;
             loop {
                 match came.get(&cur) {

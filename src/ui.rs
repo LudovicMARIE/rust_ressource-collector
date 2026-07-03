@@ -1,5 +1,3 @@
-//! Rendu de l'interface terminal avec Ratatui.
-
 use std::sync::Arc;
 
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
@@ -11,7 +9,6 @@ use ratatui::Frame;
 use crate::state::SharedState;
 use crate::types::{ResourceKind, RobotKind};
 
-// Codage couleur (conforme à la disposition visuelle demandée).
 const C_OBSTACLE: Color = Color::LightCyan;
 const C_ENERGY: Color = Color::Green;
 const C_CRYSTAL: Color = Color::LightMagenta;
@@ -19,7 +16,6 @@ const C_BASE: Color = Color::LightGreen;
 const C_SCOUT: Color = Color::Red;
 const C_COLLECTOR: Color = Color::Magenta;
 
-/// Dessine la frame complète : panneau latéral de statistiques + carte.
 pub fn render(frame: &mut Frame, shared: &Arc<SharedState>) {
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
@@ -109,7 +105,6 @@ fn render_map(frame: &mut Frame, area: Rect, shared: &Arc<SharedState>) {
         return;
     }
 
-    // Instantanés courts des états mutables.
     let ledger = shared.ledger.lock().unwrap().clone();
     let robot_views: Vec<_> = shared.robots.lock().unwrap().clone();
 
@@ -130,8 +125,6 @@ fn render_map(frame: &mut Frame, area: Rect, shared: &Arc<SharedState>) {
     frame.render_widget(Paragraph::new(lines), inner);
 }
 
-/// Détermine le caractère et la couleur d'une case selon une priorité :
-/// robot > ressource > base > obstacle > vide.
 fn cell_glyph(
     map: &crate::map::Map,
     ledger: &std::collections::HashMap<crate::types::Coord, crate::state::ResourceCell>,
